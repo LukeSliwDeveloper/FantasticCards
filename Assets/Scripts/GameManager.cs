@@ -40,9 +40,3 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
         _gameStates[_currentGameStateIndex = (_currentGameStateIndex + 1) % _gameStates.Length].Activate();
     }
 }
-/* Credits:
- * UI - https://prinbles.itch.io/robin
- * Card frame - https://bluecorvid.itch.io/card-template
- * Characters - https://aekashics.itch.io/aekashics-librarium-librarium-static-batch-megapack
- * Font (Changa One) - https://fonts.google.com/specimen/Changa+One
- * */
