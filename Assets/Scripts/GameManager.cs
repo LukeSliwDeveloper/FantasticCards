@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private Vector2 _positionOffsetPerPlayer = Vector2.right * 1.125f;
 
-    private Dictionary<BoardPosition, Vector2> _boardPositions = new Dictionary<BoardPosition, Vector2>()
+    private Dictionary<BoardPosition, Vector2> _boardPositions = new()
     {
         [BoardPosition.UpFront] = new Vector2(1.8f, 2.5f),
         [BoardPosition.MidFront] = new Vector2(1.8f, 0f),
@@ -22,7 +22,18 @@ public class GameManager : MonoBehaviourSingleton<GameManager>
 
     private int _currentGameStateIndex = -1;
 
+    private Dictionary<int, Card[]> _cardsOnBoard = new();
+
     public Vector2 BoardToRealPosition(BoardPosition boardPosition, int playerIndex) => _boardPositions[boardPosition] + _positionOffsetPerPlayer * playerIndex;
+
+    public void CardAddedToBoard(int playerIndex, Card card, BoardPosition boardPosition) 
+    {
+        if (!_cardsOnBoard.ContainsKey(playerIndex))
+            _cardsOnBoard.Add(playerIndex, new Card[9]);
+        _cardsOnBoard[playerIndex][(int)boardPosition] = card;
+    }
+
+    public Card[] GetCardsOfPlayer(int playerIndex) => _cardsOnBoard[playerIndex];
 
     protected override void Initialize()
     {

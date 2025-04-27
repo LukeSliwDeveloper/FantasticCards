@@ -1,3 +1,5 @@
+using DG.Tweening;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -7,8 +9,14 @@ public class MatchSetup : GameState
     [SerializeField] private TMP_InputField _tournamentField;
     [SerializeField] private TMP_InputField _playerField;
     [SerializeField] private TMP_InputField[] _rivalsFields;
+    [SerializeField] private Card _testCardPrefab;
 
-    private int _animatorHash = Animator.StringToHash("Visible");
+    private Vector2 _cardSpawnPosition = Vector2.left * 4.2f;
+    private Vector2 _targetCardPosition = Vector2.left * 1.4f;
+    private float _cardShowTime = .6f;
+    private float _cardShowDelay = .3f;
+    private int _animatorDraftHash = Animator.StringToHash("Draft");
+    private int _animatorRearrangeHash = Animator.StringToHash("Rearrange");
 
     string[] _firstNames = new string[] {
     "ELDOR", "MIST", "FROST", "SHADOW", "IRON", "SILVER", "GREEN", "DARK", "SUN", "STORM",
@@ -35,6 +43,9 @@ public class MatchSetup : GameState
     "REACH"
     };
 
+    private List<Card> _draftedCards= new();
+    private BoardPosition _draftedBoardPosition;
+
     private void Awake()
     {
         _tournamentField.onValueChanged.AddListener((t) => _tournamentField.text = t.ToUpper());
@@ -43,20 +54,53 @@ public class MatchSetup : GameState
             field.onValueChanged.AddListener((t) => field.text = t.ToUpper());
     }
 
-    public void GoToCardsDraft()
+    public void GoToNextStage()
     {
-        _animator.SetBool(_animatorHash, false);
+        if (_draftedBoardPosition > BoardPosition.DownBack)
+        {
+            _animator.SetBool(_animatorRearrangeHash, false);
+        }
+        else
+            _animator.SetBool(_animatorDraftHash, false);
     }
 
     public override void Activate()
     {
         base.Activate();
-        _animator.SetBool(_animatorHash, true);
+        _animator.SetBool(_animatorDraftHash, true);
         _tournamentField.text = $"{_firstNames[Random.Range(0, _firstNames.Length)]} {_secondNames[Random.Range(0, _secondNames.Length)]}";
     }
 
     private void DraftACard()
     {
+        foreach (var card in _draftedCards)
+            card.HideFromDraft(card.transform.position.x < 0f ? _cardSpawnPosition : -_cardSpawnPosition);
+        _draftedCards.Clear();
+        if (_draftedBoardPosition > BoardPosition.DownBack)
+        {
+            _animator.SetBool(_animatorRearrangeHash, true);
+            foreach (var card in GameManager.Instance.GetCardsOfPlayer(0))
+                card.ActivatePhase(CardPhase.Arrange);
+        }
+        else
+        {
+            _draftedCards.Add(Instantiate(_testCardPrefab, _cardSpawnPosition, Quaternion.identity));
+            _draftedCards.Add(Instantiate(_testCardPrefab, -_cardSpawnPosition, Quaternion.identity));
+            for (int i = 0; i < _draftedCards.Count; i++)
+            {
+                var card = _draftedCards[i];
+                card.Initialize(_draftedBoardPosition);
+                card.OnClicked += DraftACard;
+                card.transform.DOMove(_targetCardPosition * (i == 0 ? 1 : -1), _cardShowTime).SetDelay(_cardShowDelay)
+                    .OnComplete(() => card.ActivatePhase(CardPhase.Draft));
+            }
+        }
+        _draftedBoardPosition++;
+    }
 
+    private void GoToNextGameState()
+    {
+        OnChangeState?.Invoke();
+        gameObject.SetActive(false);
     }
 }
