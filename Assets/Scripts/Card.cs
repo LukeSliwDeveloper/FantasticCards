@@ -1,81 +1,70 @@
-using DG.Tweening;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 
-public class Card : MonoBehaviour, IPointerClickHandler
+public class Card : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [SerializeField] private SortingGroup _sortingGroup;
     [SerializeField] private Canvas _canvas;
+    [SerializeField] private SortingGroup _sortingGroup;
+    [field: SerializeField] public int Index { get; private set; }
 
-    private Vector3 _onBoardScale = Vector3.one * .35f;
-    private float _exitDraftTime = .3f;
+    private int _offGridSortingOrder = 0;
+    private int _onGridSortingOrder = -1;
 
-    private BoardPosition _position;
-    private CardPhase _phase;
+    private int _ownerIndex;
 
-    private BoardPosition Position
-    {
-        get => _position;
-        set
-        {
-            _position = value;
-            _sortingGroup.sortingOrder = _canvas.sortingOrder = (int)value;
-        }
+    private int SortingOrder
+    { 
+        set => _canvas.sortingOrder = _sortingGroup.sortingOrder = value;
     }
 
-    public event Action OnClicked;
+    public CardPosition Position { get; private set; }
 
-    public void Initialize(BoardPosition position)
+    public event Action<Card> OnClicked;
+    public event Action<Card, Vector2> OnDragBegan, OnDragged, OnDragEnded;
+
+    public void InitializeToPosition(CardPosition position, Vector2 worldPosition, int ownerIndex)
+    {
+        MoveToPosition(position, worldPosition);
+        transform.localScale = Vector3.one;
+        _ownerIndex = ownerIndex;
+    }
+
+    public void MoveToWorldPosition(Vector2 position)
+    {
+        transform.position = position;
+        SortingOrder = _offGridSortingOrder;
+    }
+
+    public void MoveToPosition(CardPosition position, Vector2 worldPosition)
     {
         Position = position;
+        transform.position = worldPosition;
+        SortingOrder = _onGridSortingOrder;
     }
 
-    public void ActivatePhase(CardPhase phase)
-    {
-        _phase = phase;
-    }
+    public void SetIndex(int value) => Index = value;
 
-    public void HideFromDraft(Vector2 hidePosition)
-    {
-        if(_phase == CardPhase.Draft)
-        {
-            _phase = CardPhase.Inactive;
-            transform.DOMove(hidePosition, _exitDraftTime).OnComplete(() => Destroy(gameObject));
-        }
-    }
+    public void OnPointerClick(PointerEventData eventData) => OnClicked?.Invoke(this);
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (_phase == CardPhase.Draft)
-        {
-            _phase = CardPhase.Inactive;
-            transform.DOScale(_onBoardScale, _exitDraftTime);
-            transform.DOMove(GameManager.Instance.BoardToRealPosition(_position, 0), _exitDraftTime);
-            GameManager.Instance.CardAddedToBoard(0, this, _position);
-            OnClicked?.Invoke();
-        }
-    }
+    public void OnBeginDrag(PointerEventData eventData) => OnDragBegan?.Invoke(this, CameraManager.Instance.ToWorld(eventData.position));
+
+    public void OnDrag(PointerEventData eventData) => OnDragged?.Invoke(this, CameraManager.Instance.ToWorld(eventData.position));
+
+    public void OnEndDrag(PointerEventData eventData) => OnDragEnded?.Invoke(this, CameraManager.Instance.ToWorld(eventData.position));
 }
 
-public enum BoardPosition
+public enum CardPosition
 {
-    UpFront,
-    MidFront,
-    DownFront,
-    UpCenter,
-    MidCenter,
-    DownCenter,
-    UpBack,
-    MidBack,
-    DownBack
-}
-
-public enum CardPhase
-{
-    Inactive,
-    Draft,
-    Arrange,
-    Fight
+    FrontUp,
+    FrontMiddle,
+    FrontDown,
+    MiddleUp,
+    MiddleMiddle,
+    MiddleDown,
+    BackUp,
+    BackMiddle,
+    BackDown
 }
