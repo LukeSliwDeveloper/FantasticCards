@@ -1,26 +1,58 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviourSingleton<GameManager>
 {
-    [SerializeField] private GamePhase[] _gamePhases;
-    [SerializeField] private MatchData _matchData;
+    [SerializeField] private Encounter[] _encounters;
 
-    private int _currentPhaseIndex;
+    private int _maxFlowersInBouquete = 3;
 
-    protected override void Initialize()
+    private Ray _ray;
+    private RaycastHit _hit;
+    private FlowerType _hoveredFlowerType;
+    private List<FlowerType> _pickedFlowers = new();
+
+    public event Action<FlowerType> OnHoverOverFlower;
+    public event Action<FlowerType, bool> OnFlowerMoved;
+
+    private void Update()
     {
-        if (!_wasInitialized)
+        _ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(_ray, out _hit))
         {
-            foreach (var phase in _gamePhases)
-                phase.OnEnded += BeginNextPhase;
-            _gamePhases[_currentPhaseIndex].Begin(_matchData);
+            _hoveredFlowerType = _hit.transform.GetComponentInParent<Flower>().Type;
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (_pickedFlowers.Contains(_hoveredFlowerType))
+                {
+                    _pickedFlowers.Remove(_hoveredFlowerType);
+                    OnFlowerMoved?.Invoke(_hoveredFlowerType, false);
+                }
+                else if (_pickedFlowers.Count < _maxFlowersInBouquete)
+                {
+                    _pickedFlowers.Add(_hoveredFlowerType);
+                    OnFlowerMoved?.Invoke(_hoveredFlowerType, true);
+                }
+            }
+            else
+                OnHoverOverFlower?.Invoke(_hoveredFlowerType);
         }
-        base.Initialize();
     }
+}
 
-    private void BeginNextPhase()
-    {
-        _gamePhases[_currentPhaseIndex + 1].Begin(_gamePhases[_currentPhaseIndex].Data);
-        _currentPhaseIndex++;
-    }
+public enum FlowerType
+{
+    Rose,
+    Tulip,
+    Lilac,
+    Lily,
+    Daisy,
+    Chrysanthemen,
+    Daffodil,
+    Hyacinth,
+    Marigold,
+    Orchid,
+    Sunflower,
+    Iris
 }
