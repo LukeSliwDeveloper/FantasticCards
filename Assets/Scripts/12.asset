@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5aaf76f66da4f724091e4a6a814f5964, type: 3}
+  m_Name: 12
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: <FollowingEncounters>k__BackingField
+      Entry: 6
+      Data: 
+  <CharacterMaterial>k__BackingField: {fileID: 0}
+  <Dialogue>k__BackingField: 'Julian and Kirsty eventually grew apart, but they are
+    not bitter about it. Perhaps things could have turned out differently with the
+    help of the owner of their local flower store. '
